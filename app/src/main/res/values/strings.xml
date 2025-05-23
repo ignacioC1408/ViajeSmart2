@@ -1,3 +1,17 @@
 <resources>
     <string name="app_name">ViajeSmart</string>
+
+    <!-- Filtros - Manteniendo tus nombres pero agregando el de precio -->
+    <string name="filter_all">Todos</string>
+    <string name="filter_price">Precio</string>
+    <string name="filter_cheapest">Más baratos</string>
+    <string name="filter_fastest">Más rápidos</string>
+    <string name="filter_premium">Premium</string>
+    <string name="filter_time">Tiempo</string> <!-- Agregado para consistencia -->
+
+    <!-- Errores -->
+    <string name="error_title">Error</string>
+    <string name="unknown_error">Error desconocido</string>
+    <string name="retry">Reintentar</string>
+    <string name="cancel">Cancelar</string>
 </resources>

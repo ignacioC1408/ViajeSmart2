@@ -1,6 +1,5 @@
 package com.example.viajesmart
 
-import android.location.Location
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -8,11 +7,16 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.example.viajesmart.models.RideOption
@@ -26,12 +30,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             ViajeSmartTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    AppScreen(viewModel = viewModel)
-                }
+                AppScreen(viewModel = viewModel)
             }
         }
     }
@@ -39,188 +38,126 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun AppScreen(viewModel: RideViewModel) {
-    val currentLocation by viewModel.currentLocation.collectAsStateWithLifecycle()
     val rideOptions by viewModel.rideOptions.collectAsStateWithLifecycle()
-    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
-    val errorMessage by viewModel.errorMessage.collectAsStateWithLifecycle()
+    val currentLocation by viewModel.currentLocation.collectAsStateWithLifecycle()
+    val currentTime by viewModel.currentTime.collectAsStateWithLifecycle()
 
-    RideApp(
-        currentLocation = currentLocation,
-        rideOptions = rideOptions,
-        isLoading = isLoading,
-        errorMessage = errorMessage,
-        onSearch = { departure, destination ->
-            viewModel.searchRides(departure, destination)
-        }
-    )
-}
+    var destination by rememberSaveable { mutableStateOf("") }
 
-@Composable
-fun RideApp(
-    currentLocation: Location?,
-    rideOptions: List<RideOption>,
-    isLoading: Boolean,
-    errorMessage: String?,
-    onSearch: (String, String) -> Unit
-) {
-    var departure by remember { mutableStateOf("") }
-    var destination by remember { mutableStateOf("") }
-    var showError by remember { mutableStateOf(false) }
-
-    LaunchedEffect(errorMessage) {
-        if (!errorMessage.isNullOrEmpty()) {
-            showError = true
-        }
-    }
-
-    Column(
-        modifier = Modifier
-            .padding(16.dp)
-            .fillMaxSize()
-    ) {
-        OutlinedTextField(
-            value = departure,
-            onValueChange = { departure = it },
-            label = { Text("Lugar de salida") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
-
-        Spacer(modifier = Modifier.height(8.dp))
-
-        OutlinedTextField(
-            value = destination,
-            onValueChange = { destination = it },
-            label = { Text("Lugar de destino") },
-            modifier = Modifier.fillMaxWidth(),
-            singleLine = true
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Button(
-            onClick = {
-                if (departure.isNotBlank() && destination.isNotBlank()) {
-                    onSearch(departure, destination)
-                }
-            },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = departure.isNotBlank() && destination.isNotBlank()
+    Surface(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(16.dp)
         ) {
-            Text("Buscar viajes")
-        }
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        when {
-            isLoading -> {
-                Box(modifier = Modifier.fillMaxSize()) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.align(Alignment.Center)
-                    )
-                }
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
+            ) {
+                Text(
+                    text = currentTime,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Medium
+                )
             }
-            showError && !errorMessage.isNullOrEmpty() -> {
-                ErrorMessage(message = errorMessage) {
-                    showError = false
-                }
-            }
-            rideOptions.isNotEmpty() -> RideOptionsList(rideOptions = rideOptions)
-            else -> Text(
-                text = "Ingrese lugares de salida y destino",
-                modifier = Modifier.padding(vertical = 16.dp)
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = "ViajeSmart",
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Bold
             )
-        }
-    }
-}
 
-@Composable
-fun ErrorMessage(message: String, onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Error") },
-        text = { Text(message) },
-        confirmButton = {
-            Button(onClick = onDismiss) {
-                Text("OK")
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.LocationOn,
+                    contentDescription = "Ubicación actual",
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = currentLocation?.let { "${it.latitude}, ${it.longitude}" } ?: "Obteniendo ubicación...",
+                    style = MaterialTheme.typography.bodyMedium
+                )
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            OutlinedTextField(
+                value = destination,
+                onValueChange = { destination = it },
+                label = { Text("Introduce la dirección de destino") },
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = MaterialTheme.colorScheme.primary,
+                    focusedLabelColor = MaterialTheme.colorScheme.primary
+                )
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Button(
+                onClick = {
+                    viewModel.searchRides("Ubicación actual", destination)
+                },
+                modifier = Modifier.align(Alignment.End),
+                enabled = destination.isNotBlank()
+            ) {
+                Text("Buscar viajes")
+            }
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            LazyColumn(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                items(rideOptions) { ride ->
+                    RideOptionCard(ride = ride)
+                }
             }
         }
-    )
-}
-
-@Composable
-fun RideOptionsList(rideOptions: List<RideOption>) {
-    LazyColumn(
-        modifier = Modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        items(rideOptions) { option ->
-            RideOptionCard(option = option)
-        }
     }
 }
 
 @Composable
-fun RideOptionCard(option: RideOption) {
+fun RideOptionCard(ride: RideOption) {
     Card(
         modifier = Modifier.fillMaxWidth(),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(16.dp)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
             Text(
-                text = option.serviceName,
-                style = MaterialTheme.typography.titleLarge
+                text = ride.serviceName,
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold
             )
-            Spacer(modifier = Modifier.height(4.dp))
-            Text(text = "De: ${option.departure}")
-            Text(text = "A: ${option.destination}")
-            Text(text = "Tiempo estimado: ${option.estimatedTime}")
-            Text(text = "Precio: ${option.price}")
-        }
-    }
-}
 
-@Preview(showBackground = true)
-@Composable
-fun PreviewRideApp() {
-    ViajeSmartTheme {
-        RideApp(
-            currentLocation = null,
-            rideOptions = emptyList(),
-            isLoading = false,
-            errorMessage = null,
-            onSearch = { _, _ -> }
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun PreviewRideAppWithOptions() {
-    ViajeSmartTheme {
-        RideApp(
-            currentLocation = null,
-            rideOptions = listOf(
-                RideOption(
-                    serviceName = "UberX",
-                    departure = "Centro",
-                    destination = "Aeropuerto",
-                    estimatedTime = "15 min",
-                    price = "$12.50"
-                ),
-                RideOption(
-                    serviceName = "Didi",
-                    departure = "Centro",
-                    destination = "Aeropuerto",
-                    estimatedTime = "10 min",
-                    price = "$10.00"
+            Button(
+                onClick = {},
+                shape = RoundedCornerShape(20.dp),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
                 )
-            ),
-            isLoading = false,
-            errorMessage = null,
-            onSearch = { _, _ -> }
-        )
+            ) {
+                Text(
+                    text = "Solicitar\n$${ride.price}",
+                    style = MaterialTheme.typography.labelLarge,
+                    textAlign = TextAlign.Center
+                )
+            }
+        }
     }
 }

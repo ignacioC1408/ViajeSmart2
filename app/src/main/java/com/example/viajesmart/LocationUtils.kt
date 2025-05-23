@@ -1,4 +1,3 @@
-// app/src/main/java/com/example/viajesmart/utils/LocationUtils.kt
 package com.example.viajesmart.utils
 
 import android.annotation.SuppressLint
@@ -6,7 +5,12 @@ import android.content.Context
 import android.location.Location
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
-import com.google.android.gms.location.*
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationCallback
+import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.LocationResult
+import com.google.android.gms.location.LocationServices
+import com.google.android.gms.location.Priority
 
 class LocationManager(context: Context) {
     private val fusedLocationClient: FusedLocationProviderClient =
@@ -15,10 +19,12 @@ class LocationManager(context: Context) {
     private val _locationData = MutableLiveData<Location>()
     val locationData: LiveData<Location> = _locationData
 
-    // Guardamos el callback como propiedad para poder removerlo
     private val locationCallback = object : LocationCallback() {
         override fun onLocationResult(locationResult: LocationResult) {
-            _locationData.value = locationResult.lastLocation
+            super.onLocationResult(locationResult)
+            locationResult.lastLocation?.let {
+                _locationData.postValue(it)  // Usar postValue para actualización en hilo principal
+            }
         }
     }
 
@@ -26,20 +32,21 @@ class LocationManager(context: Context) {
     fun startLocationUpdates() {
         val locationRequest = LocationRequest.Builder(
             Priority.PRIORITY_HIGH_ACCURACY,
-            10000
+            10000L  // Añadir sufijo L para valores Long
         ).apply {
-            setMinUpdateIntervalMillis(5000)
+            setMinUpdateIntervalMillis(5000L)
         }.build()
 
         fusedLocationClient.requestLocationUpdates(
             locationRequest,
             locationCallback,
-            null // Looper, null para usar el hilo principal
-        )
+            null
+        ).addOnFailureListener {
+            // Manejar errores aquí
+        }
     }
 
     fun stopLocationUpdates() {
-        // Pasamos el mismo callback que usamos para registrar
         fusedLocationClient.removeLocationUpdates(locationCallback)
     }
 }
