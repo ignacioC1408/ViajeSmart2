@@ -12,9 +12,5 @@ enum class FilterOption(
     CHEAPEST(R.string.filter_cheapest, "cheapest"),
     FASTEST(R.string.filter_fastest, "fastest"),
     PREMIUM(R.string.filter_premium, "premium"),
-    TIME(R.string.filter_time, "time");
-
-    companion object {
-        fun values() = entries.toTypedArray()
-    }
+    TIME(R.string.filter_time, "time")
 }

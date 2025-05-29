@@ -23,15 +23,10 @@ fun FilterBar(
             .padding(horizontal = 16.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        FilterOption.values().forEach { filter ->
+        FilterOption.entries.forEach { filter ->
             FilterChip(
-                selected = viewModel.currentFilter?.key == filter.key,
-                onClick = {
-                    viewModel.applyFilter(
-                        if (viewModel.currentFilter?.key == filter.key) null
-                        else filter
-                    )
-                },
+                selected = viewModel.currentFilter.value == filter,
+                onClick = { viewModel.applyFilter(filter) },
                 label = { Text(stringResource(filter.displayNameRes)) },
                 colors = FilterChipDefaults.filterChipColors(
                     selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,

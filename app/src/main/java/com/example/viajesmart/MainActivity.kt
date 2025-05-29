@@ -18,7 +18,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.example.viajesmart.models.RideOption
 import com.example.viajesmart.ui.theme.ViajeSmartTheme
 import com.example.viajesmart.viewmodels.RideViewModel
@@ -30,7 +32,12 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             ViajeSmartTheme {
-                AppScreen(viewModel = viewModel)
+                // Provee el LifecycleOwner necesario para collectAsStateWithLifecycle
+                CompositionLocalProvider(
+                    LocalLifecycleOwner provides this
+                ) {
+                    AppScreen(viewModel = viewModel)
+                }
             }
         }
     }
@@ -38,9 +45,23 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun AppScreen(viewModel: RideViewModel) {
-    val rideOptions by viewModel.rideOptions.collectAsStateWithLifecycle()
-    val currentLocation by viewModel.currentLocation.collectAsStateWithLifecycle()
-    val currentTime by viewModel.currentTime.collectAsStateWithLifecycle()
+    // Obtiene el LifecycleOwner del contexto de composición
+    val lifecycleOwner = LocalLifecycleOwner.current
+
+    val rideOptions by viewModel.rideOptions.collectAsStateWithLifecycle(
+        lifecycle = lifecycleOwner.lifecycle,
+        initialValue = emptyList()
+    )
+
+    val currentLocation by viewModel.currentLocation.collectAsStateWithLifecycle(
+        lifecycle = lifecycleOwner.lifecycle,
+        initialValue = null
+    )
+
+    val currentTime by viewModel.currentTime.collectAsStateWithLifecycle(
+        lifecycle = lifecycleOwner.lifecycle,
+        initialValue = ""
+    )
 
     var destination by rememberSaveable { mutableStateOf("") }
 

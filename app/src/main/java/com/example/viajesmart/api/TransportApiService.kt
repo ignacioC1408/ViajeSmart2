@@ -12,7 +12,7 @@ interface TransportApiService {
     suspend fun getRideOptions(
         @Query("origin") departure: String,
         @Query("destination") destination: String
-    ): Response<ApiResponse<List<RideOption>>>  // Respuesta envuelta en objeto
+    ): Response<ApiResponse<List<RideOption>>>
 }
 
 data class ApiResponse<T>(
@@ -22,7 +22,7 @@ data class ApiResponse<T>(
 )
 
 object TransportApi {
-    private const val BASE_URL = "https://tumockapi.com/api/v1/"  // URL más específica
+    private const val BASE_URL = "https://tumockapi.com/api/v1/"
 
     val instance: TransportApiService by lazy {
         Retrofit.Builder()
